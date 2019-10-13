@@ -1,6 +1,7 @@
 package com.example.administrator.coolweather;
 
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.media.session.MediaControllerCompat;
@@ -19,6 +20,7 @@ import com.example.administrator.coolweather.R;
 import com.example.administrator.coolweather.db.City;
 import com.example.administrator.coolweather.db.County;
 import com.example.administrator.coolweather.db.Province;
+import com.example.administrator.coolweather.gson.Weather;
 import com.example.administrator.coolweather.util.HttpUtil;
 import com.example.administrator.coolweather.util.Utility;
 
@@ -98,6 +100,20 @@ private int currentLevel;
                 else if (currentLevel==LEVEL_CITY){
                     selectedCity=cityList.get(position);
                     queryCounties();
+                }else if(currentLevel==LEVEL_COUNTY){
+                    String weatherId=countyList.get(position).getWeatherId();
+                    if(getActivity()instanceof MainActivity){
+                    Intent intent=new Intent(getActivity(),WeatherActivity.class);
+                    intent.putExtra("weather_id",weatherId);
+                    startActivity(intent);
+                    getActivity().finish();
+                    }else if(getActivity()instanceof WeatherActivity){
+                    WeatherActivity activity=(WeatherActivity)getActivity();
+                    activity.drawerLayout.closeDrawers();
+                    activity.swipeRefresh.setRefreshing(true);
+                    activity.requestWeather(weatherId);
+                    }
+
                 }
             }
         });
@@ -186,21 +202,15 @@ private int currentLevel;
                 boolean result=false;
                 if("province".equals(type)){
                     result= Utility.handleProvinceResponse(responseText);
-                }else if("city".equals((type))){Log.d("apple","cba");
-                    Log.d("apple2",responseText);
-                    Log.d("apple3",""+selectedProvince.getId());
+                }else if("city".equals((type))){
                     result=Utility.handleCityResponse(responseText,selectedProvince.getId());
-                    Log.d("apple4",""+result);
                 }else if("county".equals(type)){
                     result=Utility.handleCountyResponse(responseText,selectedCity.getId());
-                    Log.d("apple6",""+result);
                 }
                 if(result){
-                    Log.d("apple5","qqq");
                     getActivity().runOnUiThread(new Runnable(){
                         @Override
                         public void run(){
-                            Log.d("apple","qqq");
                             closeProgressDialog();
                             if("province".equals(type)){
                                 queryProvinces();
@@ -237,7 +247,6 @@ private int currentLevel;
         progressDialog.show();
     }
     private void closeProgressDialog(){
-        Log.d("you","youyou");
         if(progressDialog!=null){
             progressDialog.dismiss();
         }
